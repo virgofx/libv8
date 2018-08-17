@@ -8,8 +8,8 @@ services:
 
 env: 
   - CHANNEL=stable
-  - CHANNEL=beta
-  - CHANNEL=dev
+#  - CHANNEL=beta
+#- CHANNEL=dev
 
 before_install:
   - sudo apt-get update -qq
@@ -37,7 +37,7 @@ script:
   - echo "[${CHANNEL}] V8 ${V8_VERSION}"
 #  - ./scripts/build.sh ${V8_VERSION}
 #  - docker run -it -e V8_VERSION -v `pwd`:/home libv8/build bash -c "echo $V8_VERSION"
-  - docker run -i -e V8_VERSION -t libv8/build bash -v `pwd`:/home bash -c "echo $V8_VERSION"
+  - docker run -i -e V8_VERSION -t libv8/build bash bash -c "echo $V8_VERSION"
 
   # docker run -it -e V8_VERSION -v /vagrant:/home libv8/build bash -c "/home/scripts/build.sh ${V8_VERSION}"
 

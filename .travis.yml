@@ -1,0 +1,67 @@
+dist: trusty
+sudo: required
+
+language: cpp
+
+services:
+  - docker
+
+env: 
+  - CHANNEL=stable
+  - CHANNEL=beta
+  - CHANNEL=dev
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y jq
+
+install: true
+
+before_script:
+  - V8_VERSION=$(curl -s https://omahaproxy.appspot.com/all.json | jq -r '.[].versions[] | select(.os == "linux") | select(.channel == "'${CHANNEL}'") | .v8_version')
+  # Detect this and modify in the future based on comparison against packagecloud.io
+  - DO_BUILD_DEPLOY=false
+
+
+#
+# script:
+#  - >
+#    docker run -it -e DEBFULLNAME -e DEBEMAIL -e TARGET_DIR \
+#      -v `pwd`/packaging:/root/packaging ${TRAVIS_REPO_SLUG} \
+#      bash -c "gpg --import public.key && gpg --allow-secret-key-import --import private.key && gpg --fingerprint \
+#               && cd $TARGET_DIR && make clean && make dput"
+#
+#
+#
+script:
+  - echo "[${CHANNEL}] V8 ${V8_VERSION}"
+#  - ./scripts/build.sh ${V8_VERSION}
+#  - docker run -it -e V8_VERSION -v `pwd`:/home libv8/build bash -c "echo $V8_VERSION"
+  - docker run -i -e V8_VERSION -t libv8/build bash -v `pwd`:/home bash -c "echo $V8_VERSION"
+
+  # docker run -it -e V8_VERSION -v /vagrant:/home libv8/build bash -c "/home/scripts/build.sh ${V8_VERSION}"
+
+#      -v `pwd`/packaging:/root/packaging ${TRAVIS_REPO_SLUG} \
+#      bash -c "gpg --import public.key && gpg --allow-secret-key-import --import private.key && gpg --fingerprint \
+#               && cd $TARGET_DIR && make clean && make dput"
+# build (Only if changed) --- Hopefully only do this once  
+# package (DEB/RPM only if changed)
+
+  # deploy (only if changed)
+  # packagecloud
+  
+
+deploy:
+  - provider: packagecloud
+    username: "${PACKAGECLOUD_USER}"
+    repository: "${PACKAGECLOUD_REPO}"
+    token: "${PACKAGECLOUD_TOKEN}"
+    dist: "ubuntu/xenial"
+    package_glob: build/*.{deb}
+    skip_cleanup: true
+    repository: "libv8"
+    username: "libv8"
+    token: "1095e3996f3387ebc870209bbcea825c6ce781c17f80d620"
+    dist: "ubuntu/xenial"
+    on:
+      condition: $DO_BUILD_DEPLOY = true
